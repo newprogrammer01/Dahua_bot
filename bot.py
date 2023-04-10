@@ -4,6 +4,7 @@ import os
 from db import DB
 import datetime
 TOKEN=os.environ['TOKEN']
+import json
 
 
 
@@ -17,7 +18,7 @@ def start(update:Update, context:CallbackContext):
     #last_name=update.message.from_user.last_name
     text=f'Assalomu alaykum {first_name}'
     db=DB('db.json')
-   # db.starting(user_id)
+
     db.save()
 
     if update.message.chat.type=='private':
@@ -25,7 +26,7 @@ def start(update:Update, context:CallbackContext):
          text=f'Tilni tanlang'
          uzbek_tili=InlineKeyboardButton("Uzbek tili 🇺🇿", callback_data='uzbek_tili')
          rus_tili=InlineKeyboardButton('Rus tili 🇷🇺', callback_data='rus_tili')
-         #tojik_tili=InlineKeyboardButton('Tojik tili 🇹🇯', callback_data='tojik_tili')
+
          button=InlineKeyboardMarkup([[uzbek_tili, rus_tili]])
          bot.sendMessage(chat_id=chat_id, text=text, reply_markup=button)
 def query(update: Update, context: CallbackContext):
@@ -38,13 +39,20 @@ def query(update: Update, context: CallbackContext):
 
     if data=='uzbek_tili':
        # bot.send_contact(chat_id=chat_id, phone_number="+998904776646", first_name='sooft_admin')
-         keyboard=ReplyKeyboardMarkup([
+         keyboard=[
             ['Routerlar 🌐', 'Monitorlar 🖥', "Kameralar 📸"],
             ['🚖 Mashinaga GPS navigator', 'Elektron eshik qulfi 🔐'],
-            ['Televizorlar va boshqa mahsulotlar 🖥'],
-            ["Biz bilan bog'lanish ☎️"],
+            ['Televizorlar va boshqa mahsulotlar 🖥',"Biz bilan bog'lanish ☎️"],
             ['Asosiy Menuga qaytish ⬅️']
-         ], resize_keyboard=True)
+        
+         ]
+         db=open('db.json').read()
+         admins=json.loads(db)
+         admins=admins['admins']
+         if str(chat_id) in admins:
+            keyboard.append(["admin 👨‍🦰"])
+        
+         keyboard=ReplyKeyboardMarkup(keyboard)
          text="Xurmatli mijoz siz bu bot orqali uzingizni qiziqtirgan savollarga javob topishingiz mumkin!"
          bot.sendMessage(chat_id=chat_id, reply_markup=keyboard, text=text)
     elif data=='rus_tili':
@@ -63,6 +71,28 @@ def query(update: Update, context: CallbackContext):
         bot.sendContact(chat_id=chat_id, phone_number='+998333344442', first_name="Жахонгир Хайдаров")
     elif data=="tel_rus":
         bot.sendContact(chat_id=chat_id, phone_number='+998333344442', first_name="Жахонгир Хайдаров")
+    elif data=="admin_qushish_uz":
+        db=open('db.json').read()
+        admins=json.loads(db)
+        bot=context.bot
+        admins['add']=True
+        data=json.dumps(admins)
+        db=open('db.json','w')
+        db.write(data) 
+        db.close()
+        bot.sendMessage(chat_id=chat_id, text="Admin qushish uchun foydalanuvchining user_id sini yozing")
+    elif data=='admin_uchirish_uz':
+        text=query.message.text
+        db=open('db.json').read()
+        admins=json.loads(db)
+        admins['del']=True
+        data=json.dumps(admins)
+        db=open('db.json','w')
+        db.write(data) 
+        db.close()
+        bot.sendMessage(chat_id=chat_id, text="Admin qushish uchun foydalanu")
+        
+
     return 'OK'   
 
 def router_uz(update:Update, context:CallbackContext):
@@ -157,6 +187,52 @@ def aloqa_rus(update:Update, context:CallbackContext):
 
     ])
     bot.sendMessage(chat_id=chat_id, reply_markup=keyboar, text="Уважаемый клиент, пожалуйста, выберите один из вариантов ниже, чтобы связаться с нами.")
+def admin_uz(update:Update, context:CallbackContext):
+    chat_id=update.message.chat.id
+    bot=context.bot
+    keyboar=InlineKeyboardMarkup([
+        [InlineKeyboardButton(text='Admin qushish 🧓', callback_data='admin_qushish_uz')],
+        [InlineKeyboardButton(text='Admin uchirish 🗑', callback_data='admin_uchirish_uz')],
+        [InlineKeyboardButton(text="Botni guruhga qo'shish 👥", url='https://t.me/Dahua_Sam_bot?startgroup=test')]
+        
+
+    ])
+    bot.sendMessage(chat_id=chat_id, reply_markup=keyboar, text='Marxamat!')
+
+   
+def add_admin(update:Update,context:CallbackContext):
+    chat_id=update.message.chat_id
+    bot=context.bot
+    db=open('db.json').read()
+    admins=json.loads(db)
+    add=admins['add']
+    if add and str(chat_id) in admins['admins']:
+        admin_id=update.message.text
+        admins['admins'].append(str(admin_id))
+        admins['add']=False
+        data=json.dumps(admins)
+        db=open('db.json','w')
+        db.write(data) 
+        db.close()
+        bot.sendMessage(chat_id=chat_id, text="Admin qushildi")
+    elif str(chat_id) in admins['admins'] and admins['del']:
+        
+        admin_id=update.message.text  
+        bot=context.bot
+        admins['del']=False
+        admins['admins'].remove(admin_id)
+        data=json.dumps(admins)
+        db=open('db.json','w')
+        db.write(data) 
+        db.close()
+        bot.send_message(chat_id, 'HI')
+
+
+
+
+
+
+
 updater=Updater(token=TOKEN)
 
 dp=updater.dispatcher
@@ -168,7 +244,7 @@ dp.add_handler(MessageHandler(Filters.text('Monitorlar 🖥'), monitor_uz))
 dp.add_handler(MessageHandler(Filters.text("Kameralar 📸"), kameralar_uz))
 dp.add_handler(MessageHandler(Filters.text('🚖 Mashinaga GPS navigator'), gps_uz))
 dp.add_handler(MessageHandler(Filters.text('Elektron eshik qulfi 🔐'), qulf_uz))
-dp.add_handler(MessageHandler(Filters.text('Televizorlar va boshqa mahsulotlar'), tv_uz))
+dp.add_handler(MessageHandler(Filters.text('Televizorlar va boshqa mahsulotlar 🖥'), tv_uz))
 dp.add_handler(MessageHandler(Filters.text("Вернуться в главное меню ⬅️"), start))
 dp.add_handler(MessageHandler(Filters.text("Роутеры 🌐"), router_rus))
 dp.add_handler(MessageHandler(Filters.text('Мониторы 🖥'), monitor_rus))
@@ -178,6 +254,8 @@ dp.add_handler(MessageHandler(Filters.text("Электронный замок �
 dp.add_handler(MessageHandler(Filters.text("Телевизоры и другие товары"),tv_rus))
 dp.add_handler(MessageHandler(Filters.text("Biz bilan bog'lanish ☎️"), aloqa_uz))
 dp.add_handler(MessageHandler(Filters.text("связаться с нами ☎️"), aloqa_rus))
+dp.add_handler(MessageHandler(Filters.text("admin 👨‍🦰"), admin_uz))
+dp.add_handler(MessageHandler(Filters.text,add_admin))
 
 
 
