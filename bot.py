@@ -15,85 +15,16 @@ def start(update:Update, context:CallbackContext):
     user_id=update.message.from_user.id
     chat_id=update.message.chat_id
     first_name=update.message.from_user.first_name
-    #last_name=update.message.from_user.last_name
     text=f'Assalomu alaykum {first_name}'
-    db=DB('db.json')
-
-    db.save()
-
     if update.message.chat.type=='private':
          bot.send_message(chat_id=chat_id, text=text)
          text=f'Tilni tanlang'
          uzbek_tili=InlineKeyboardButton("Uzbek tili 🇺🇿", callback_data='uzbek_tili')
          rus_tili=InlineKeyboardButton('Rus tili 🇷🇺', callback_data='rus_tili')
+         
 
          button=InlineKeyboardMarkup([[uzbek_tili, rus_tili]])
          bot.sendMessage(chat_id=chat_id, text=text, reply_markup=button)
-def query(update: Update, context: CallbackContext):
-    query=update.callback_query
-    chat_id=query.message.chat.id
-    data=query.data
-    bot=context.bot
-    
-    
-
-    if data=='uzbek_tili':
-       # bot.send_contact(chat_id=chat_id, phone_number="+998904776646", first_name='sooft_admin')
-         keyboard=[
-            ['Routerlar 🌐', 'Monitorlar 🖥', "Kameralar 📸"],
-            ['🚖 Mashinaga GPS navigator', 'Elektron eshik qulfi 🔐'],
-            ['Televizorlar va boshqa mahsulotlar 🖥',"Biz bilan bog'lanish ☎️"],
-            ['Asosiy Menuga qaytish ⬅️']
-        
-         ]
-         db=open('db.json').read()
-         admins=json.loads(db)
-         admins=admins['admins']
-         if str(chat_id) in admins:
-            keyboard.append(["admin 👨‍🦰"])
-        
-         keyboard=ReplyKeyboardMarkup(keyboard)
-         text="Xurmatli mijoz siz bu bot orqali uzingizni qiziqtirgan savollarga javob topishingiz mumkin!"
-         bot.sendMessage(chat_id=chat_id, reply_markup=keyboard, text=text)
-    elif data=='rus_tili':
-        keyboard=ReplyKeyboardMarkup([
-            ['Роутеры 🌐', 'Мониторы 🖥', 'Камеры 📸'],
-            ['🚖 Автомобильный GPS навигатор', "Электронный замок 🔐"],
-            ["Телевизоры и другие товары 🖥"],
-            ["связаться с нами ☎️"],
-            ['Вернуться в главное меню ⬅️']
-
-
-        ], resize_keyboard=True)
-        text="Уважаемый клиент, вы можете найти ответы на свои вопросы через этого бота!"   
-        bot.sendMessage(chat_id=chat_id, reply_markup=keyboard, text=text)  
-    elif data=='tel_uz':
-        bot.sendContact(chat_id=chat_id, phone_number='+998333344442', first_name="Жахонгир Хайдаров")
-    elif data=="tel_rus":
-        bot.sendContact(chat_id=chat_id, phone_number='+998333344442', first_name="Жахонгир Хайдаров")
-    elif data=="admin_qushish_uz":
-        db=open('db.json').read()
-        admins=json.loads(db)
-        bot=context.bot
-        admins['add']=True
-        data=json.dumps(admins)
-        db=open('db.json','w')
-        db.write(data) 
-        db.close()
-        bot.sendMessage(chat_id=chat_id, text="Admin qushish uchun foydalanuvchining user_id sini yozing")
-    elif data=='admin_uchirish_uz':
-        text=query.message.text
-        db=open('db.json').read()
-        admins=json.loads(db)
-        admins['del']=True
-        data=json.dumps(admins)
-        db=open('db.json','w')
-        db.write(data) 
-        db.close()
-        bot.sendMessage(chat_id=chat_id, text="Admin qushish uchun foydalanu")
-        
-
-    return 'OK'   
 
 def router_uz(update:Update, context:CallbackContext):
     chat_id=update.message.chat.id
@@ -187,49 +118,80 @@ def aloqa_rus(update:Update, context:CallbackContext):
 
     ])
     bot.sendMessage(chat_id=chat_id, reply_markup=keyboar, text="Уважаемый клиент, пожалуйста, выберите один из вариантов ниже, чтобы связаться с нами.")
-def admin_uz(update:Update, context:CallbackContext):
-    chat_id=update.message.chat.id
+
+
+def chanel_photo(update: Update, context: CallbackContext):
+    bot = context.bot
+    db=open('admins.json').read()
+    admins=json.loads(db)
+    admins=admins['admins']
+    chat_id=update.message.chat_id
+    if str(chat_id) in admins:
+
+
+        photo = update.message.photo
+
+        file_id = photo[0].file_id
+        with open("chanel.json") as f:
+         data = json.loads(f.read())
+         
+         for url in data["chanel_urls"]:
+            bot.sendPhoto(url, file_id)
+        with open('db.json') as f:
+            data=json.loads(f.read())
+            for url in data['users']:
+                bot.sendPhoto(url, file_id)
+
+            
+
+def query(update: Update, context: CallbackContext):
+    query=update.callback_query
+    chat_id=query.message.chat.id
+    data=query.data
     bot=context.bot
-    keyboar=InlineKeyboardMarkup([
-        [InlineKeyboardButton(text='Admin qushish 🧓', callback_data='admin_qushish_uz')],
-        [InlineKeyboardButton(text='Admin uchirish 🗑', callback_data='admin_uchirish_uz')],
-        [InlineKeyboardButton(text="Botni guruhga qo'shish 👥", url='https://t.me/Dahua_Sam_bot?startgroup=test')]
+    
+    
+
+    if data=='uzbek_tili':
+         keyboard=ReplyKeyboardMarkup([
+            ['Routerlar 🌐', 'Monitorlar 🖥', "Kameralar 📸"],
+            ['🚖 Mashinaga GPS navigator', 'Elektron eshik qulfi 🔐'],
+            ['Televizorlar va boshqa mahsulotlar 🖥',"Biz bilan bog'lanish ☎️"],
+            ['Bot haqida 🤖','Asosiy Menuga qaytish ⬅️']
+           
+        
+         ], resize_keyboard=True)
+         text="Xurmatli mijoz siz bu bot orqali uzingizni qiziqtirgan savollarga javob topishingiz mumkin!"
+         bot.sendMessage(chat_id=chat_id, reply_markup=keyboard, text=text)
+    elif data=='rus_tili':
+        keyboard=ReplyKeyboardMarkup([
+            ['Роутеры 🌐', 'Мониторы 🖥', 'Камеры 📸'],
+            ['🚖 Автомобильный GPS навигатор', "Электронный замок 🔐"],
+            ["Телевизоры и другие товары 🖥", "связаться с нами ☎️"],
+            ["О боте 🤖",'Вернуться в главное меню ⬅️']
+         ], resize_keyboard=True)
         
 
-    ])
-    bot.sendMessage(chat_id=chat_id, reply_markup=keyboar, text='Marxamat!')
+        text="Уважаемый клиент, вы можете найти ответы на свои вопросы через этого бота!"   
+        bot.sendMessage(chat_id=chat_id, reply_markup=keyboard, text=text)  
+    elif data=='tel_uz':
+        bot.sendContact(chat_id=chat_id, phone_number='+998333344442', first_name="Жахонгир Хайдаров")
+    elif data=="tel_rus":
+        bot.sendContact(chat_id=chat_id, phone_number='+998333344442', first_name="Жахонгир Хайдаров")
+    
+    
 
-   
-def add_admin(update:Update,context:CallbackContext):
+    return 'OK'   
+def bot_uz(update:Update, context:CallbackContext):
     chat_id=update.message.chat_id
     bot=context.bot
-    db=open('db.json').read()
-    admins=json.loads(db)
-    add=admins['add']
-    if add and str(chat_id) in admins['admins']:
-        admin_id=update.message.text
-        admins['admins'].append(str(admin_id))
-        admins['add']=False
-        data=json.dumps(admins)
-        db=open('db.json','w')
-        db.write(data) 
-        db.close()
-        bot.sendMessage(chat_id=chat_id, text="Admin qushildi")
-    elif str(chat_id) in admins['admins'] and admins['del']:
-        
-        admin_id=update.message.text  
-        bot=context.bot
-        admins['del']=False
-        admins['admins'].remove(admin_id)
-        data=json.dumps(admins)
-        db=open('db.json','w')
-        db.write(data) 
-        db.close()
-        bot.send_message(chat_id, 'HI')
-
-
-
-
+    bot.sendMessage(chat_id=chat_id, text="Har xil turdagi telegram botlar yasatish uchun  @TATU103 murojat qilishingiz mumkin")
+    bot.sendContact(chat_id=chat_id, phone_number='+998906560727', first_name='Jasurbek Pirnazarov')
+def bot_rus(update:Update, context:CallbackContext):
+    chat_id=update.message.chat.id
+    bot=context.bot
+    bot.sendMessage(chat_id=chat_id, text="Вы можете обратиться к @TATU103 для создания различных типов ботов для телеграмм.")
+    bot.sendContact(chat_id=chat_id, phone_number='+998906560727', first_name="Jasurbek Pirnazarov")
 
 
 
@@ -251,11 +213,12 @@ dp.add_handler(MessageHandler(Filters.text('Мониторы 🖥'), monitor_rus
 dp.add_handler(MessageHandler(Filters.text('Камеры 📸'), kameralar_rus))
 dp.add_handler(MessageHandler(Filters.text('🚖 Автомобильный GPS навигатор'), gps_rus))
 dp.add_handler(MessageHandler(Filters.text("Электронный замок 🔐"), qulf_rus))
-dp.add_handler(MessageHandler(Filters.text("Телевизоры и другие товары"),tv_rus))
+dp.add_handler(MessageHandler(Filters.text("Телевизоры и другие товары 🖥"),tv_rus))
 dp.add_handler(MessageHandler(Filters.text("Biz bilan bog'lanish ☎️"), aloqa_uz))
 dp.add_handler(MessageHandler(Filters.text("связаться с нами ☎️"), aloqa_rus))
-dp.add_handler(MessageHandler(Filters.text("admin 👨‍🦰"), admin_uz))
-dp.add_handler(MessageHandler(Filters.text,add_admin))
+dp.add_handler(MessageHandler(Filters.text('Bot haqida 🤖'), bot_uz))
+dp.add_handler(MessageHandler(Filters.text("О боте 🤖"), bot_rus))
+dp.add_handler(MessageHandler(Filters.photo, chanel_photo))
 
 
 
